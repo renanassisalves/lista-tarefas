@@ -1,3 +1,3 @@
 # To-do List
 
-Lists tasks that user inserted on app execution
+App made in Flutter that lists tasks the user inserted on app execution
