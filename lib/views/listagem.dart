@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../classes.dart';
+import '../models/item.dart';
 import 'cadastrar.dart';
 import 'editar.dart';
 
@@ -59,7 +59,9 @@ class Listagem extends StatelessWidget {
             return Card(
               child: ListTile(
                 title: Text(tarefa.nome),
-                subtitle: Text("${tarefa.datahora.day}/${tarefa.datahora.month}/${tarefa.datahora.year} - ${tarefa.datahora.hour}:${tarefa.datahora.minute}"),
+                subtitle: Text("${tarefa.datahora.day}/${tarefa.datahora.month}/${tarefa.datahora.year}"
+                               " - ${tarefa.datahora.hour}:${tarefa.datahora.minute}"
+                               " | Coordenadas: lat ${tarefa.latitude} lon ${tarefa.longitude}"),
                 trailing: const Icon(Icons.arrow_forward_ios_outlined),
                 onTap: () {
                   editarTarefa(tarefa, index);

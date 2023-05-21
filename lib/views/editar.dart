@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lista_tarefas/utils/utils.dart';
 import 'package:location/location.dart';
-import '../classes.dart';
+import '../models/item.dart';
 import '/views/listagem.dart';
 
 class Editar extends StatefulWidget {
@@ -13,7 +14,6 @@ class Editar extends StatefulWidget {
 }
 
 class _EditarState extends State<Editar> {
-  DateTime dateTime = DateTime.now();
   double latitude = 0.0;
   double longitude = 0.0;
   List<Item> listaItens = [];
@@ -21,25 +21,68 @@ class _EditarState extends State<Editar> {
   var controllerTarefa = TextEditingController();
 
   @override
-  void dispose() {
-    controllerTarefa.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     int index = widget.index;
 
-    if (widget.lista != null)
-    {
+    if (widget.lista != null) {
       listaItens = widget.lista!;
     }
 
     Item tarefa = widget.itemAtual!;
+    DateTime dateTime = tarefa.datahora;
 
     controllerTarefa.text = tarefa.nome;
 
-    _initLocationService();
+    inicializarServicoLocalizacao();
+
+    _selecionarData() async {
+      final data = await pegarData(context, dateTime);
+      if (data == null) return;
+
+      final novaDataHora = DateTime(
+          data.year,
+          data.month,
+          data.day,
+          dateTime.hour,
+          dateTime.minute
+      );
+
+      setState(() {
+        tarefa.datahora = novaDataHora;
+      });
+    }
+
+    _selecionarHorario() async {
+      final horario = await pegarHorario(context, dateTime);
+      if (horario == null) return;
+
+      final novaDataHora = DateTime(
+          dateTime.year,
+          dateTime.month,
+          dateTime.day,
+          horario.hour,
+          horario.minute
+      );
+
+      setState(() {
+        tarefa.datahora = novaDataHora;
+      });
+    }
+
+    Widget _selecionarDataHora() {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: () async {_selecionarData();},
+            child: Text('${dateTime.day}/${dateTime.month}/${dateTime.year}'),
+          ),
+          const SizedBox(width: 10),
+          ElevatedButton(onPressed: () async {_selecionarHorario();},
+              child: Text('${dateTime.hour.toString().padLeft(2, "0")}:${dateTime.minute.toString().padLeft(2, "0")}'))
+        ],
+      );
+    }
 
     return MaterialApp(
         theme: ThemeData(
@@ -68,39 +111,7 @@ class _EditarState extends State<Editar> {
                     style: TextStyle(fontSize: 20),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () async {
-                          final date = await pickDate();
-                          if (date == null) return;
-                          setState(() {
-                            dateTime = date;
-                          });
-                        },
-                        child: Text('${dateTime.day}/${dateTime.month}/${dateTime.year}'),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(onPressed: () async {
-                        final time = await pickTime();
-                        if (time == null) return;
-
-                        final newDateTime = DateTime(
-                            dateTime.year,
-                            dateTime.month,
-                            dateTime.day,
-                            time.hour,
-                            time.minute
-                        );
-
-                        setState(() {
-                          dateTime = newDateTime;
-                        });
-                      },
-                          child: Text('${dateTime.hour}:${dateTime.minute}'))
-                    ],
-                  ),
+                  _selecionarDataHora(),
                   const SizedBox(height: 32,),
                   Row(mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -168,21 +179,21 @@ class _EditarState extends State<Editar> {
         )
     );
   }
-
-  Future<DateTime?> pickDate() => showDatePicker(
+  Future<DateTime?> pegarData(context, dateTime) => showDatePicker(
       context: context,
       initialDate: dateTime,
       firstDate: DateTime(2023),
-      lastDate: DateTime(2100));
+      lastDate: DateTime(2100)
+  );
 
-  Future<TimeOfDay?> pickTime() => showTimePicker(
+  Future<TimeOfDay?> pegarHorario(context, dateTime) => showTimePicker(
       context: context,
       initialTime: TimeOfDay(
           hour: dateTime.hour,
           minute: dateTime.minute)
   );
 
-  Future _initLocationService() async {
+  Future inicializarServicoLocalizacao() async {
     var location = Location();
 
     if (!await location.serviceEnabled()) {
@@ -200,6 +211,7 @@ class _EditarState extends State<Editar> {
     }
 
     var loc = await location.getLocation();
+
     latitude = loc.latitude ?? 0.0;
     longitude = loc.longitude ?? 0.0;
   }
