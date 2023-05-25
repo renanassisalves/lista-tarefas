@@ -33,7 +33,9 @@ class TarefaProvider with ChangeNotifier {
 
  void atualizarDataHora(novaDataHora) {
   dataHoraAtual = novaDataHora;
-  tarefaEditando.datahora = novaDataHora;
+  try {
+   tarefaEditando.datahora = novaDataHora;
+  } catch(e) {}
   notifyListeners();
  }
 

@@ -19,9 +19,9 @@ class _CadastrarState extends State<Cadastrar> {
 
   @override
   Widget build(BuildContext context) {
-    final _tarefas = Provider.of<TarefaProvider>(context);
+    final tarefaProvider = Provider.of<TarefaProvider>(context);
 
-    _tarefas.retornarLocalizacao().then((locationData) {
+    tarefaProvider.retornarLocalizacao().then((locationData) {
       latitude = locationData.latitude!;
       longitude = locationData.longitude!;
     });
@@ -78,7 +78,7 @@ class _CadastrarState extends State<Cadastrar> {
                           },
                         );
                       } else {
-                        _tarefas.listaTarefas.add(Tarefa(controllerTarefa.text, _tarefas.dataHoraAtual, latitude, longitude)
+                        tarefaProvider.listaTarefas.add(Tarefa(controllerTarefa.text, tarefaProvider.dataHoraAtual, latitude, longitude)
                         );
                         Navigator.pushAndRemoveUntil(
                             context,
