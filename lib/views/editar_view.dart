@@ -84,7 +84,7 @@ class _EditarState extends State<Editar> {
                               ),
                                 ElevatedButton(
                                   onPressed: () {
-                                    tarefaProvider.listaTarefas.remove(index);
+                                    tarefaProvider.listaTarefas.removeAt(index);
                                     Navigator.pushAndRemoveUntil(
                                         context,
                                         MaterialPageRoute(
