@@ -1,79 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:lista_tarefas/utils/utils.dart';
+import 'package:lista_tarefas/components/selecionar_datahora.dart';
 import 'package:location/location.dart';
-import '../models/item.dart';
-import 'listagem.dart';
+import 'package:provider/provider.dart';
+import 'package:lista_tarefas/providers/tarefa_provider.dart';
+import '../models/tarefa.dart';
+import 'listagem_view.dart';
 
 class Cadastrar extends StatefulWidget {
-  List<Item>? lista;
-  Cadastrar({super.key, this.lista});
+  const Cadastrar({super.key});
   @override
   State<Cadastrar> createState() => _CadastrarState();
 }
 
 class _CadastrarState extends State<Cadastrar> {
-  DateTime dateTime = DateTime.now();
   double latitude = 0.0;
   double longitude = 0.0;
-  List<Item> listaItens = [];
   final controllerTarefa = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    if (widget.lista != null) {
-      listaItens = widget.lista!;
-    }
+    final _tarefas = Provider.of<TarefaProvider>(context);
 
-    inicializarServicoLocalizacao();
-
-    _selecionarData() async {
-      final data = await pegarData(context, dateTime);
-      if (data == null) return;
-
-      final novaDataHora = DateTime(
-          data.year,
-          data.month,
-          data.day,
-          dateTime.hour,
-          dateTime.minute
-      );
-
-      setState(() {
-        dateTime = novaDataHora;
-      });
-    }
-
-    _selecionarHorario() async {
-      final horario = await pegarHorario(context, dateTime);
-      if (horario == null) return;
-
-      final novaDataHora = DateTime(
-          dateTime.year,
-          dateTime.month,
-          dateTime.day,
-          horario.hour,
-          horario.minute
-      );
-
-      setState(() {
-        dateTime = novaDataHora;
-      });
-    }
-
-    Widget _selecionarDataHora() {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () async {_selecionarData();},
-            child: Text('${dateTime.day}/${dateTime.month}/${dateTime.year}'),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(onPressed: () async {_selecionarHorario();},
-              child: Text('${dateTime.hour.toString().padLeft(2, "0")}:${dateTime.minute.toString().padLeft(2, "0")}'))
-        ],
-      );
-    }
+    _tarefas.retornarLocalizacao().then((locationData) {
+      latitude = locationData.latitude!;
+      longitude = locationData.longitude!;
+    });
 
     return MaterialApp(
         theme: ThemeData(
@@ -81,7 +32,7 @@ class _CadastrarState extends State<Cadastrar> {
         ),
         home: Scaffold(
           appBar: AppBar(
-            title: Text("Crie uma nova tarefa"),
+            title: const Text("Crie uma nova tarefa"),
           ),
           body:
           Container(
@@ -106,12 +57,12 @@ class _CadastrarState extends State<Cadastrar> {
                     style: TextStyle(fontSize: 20),
                   ),
                   const SizedBox(height: 16),
-                  _selecionarDataHora(),
+                  SelecionarDataHora(context),
                   const SizedBox(height: 32,),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
-                    }, child: Text("Cancelar")),
+                    }, child: const Text("Cancelar")),
                     const SizedBox(width: 16),
                     ElevatedButton(onPressed: () {
                       if (controllerTarefa.text == "") {
@@ -119,24 +70,20 @@ class _CadastrarState extends State<Cadastrar> {
                           context: context,
                           builder: (context) {
                             return AlertDialog(
-                              content: Text("Digite uma tarefa antes de cadastrá-la."),
+                              content: const Text("Digite uma tarefa antes de cadastrá-la."),
                               actions: [TextButton(onPressed: () {
                                 Navigator.pop(context);
-                              }, child: Text("Fechar"))],
+                              }, child: const Text("Fechar"))],
                             );
                           },
                         );
                       } else {
-                        listaItens.add(Item(
-                            controllerTarefa.text,
-                            dateTime,
-                            latitude,
-                            longitude
-                        ));
+                        _tarefas.listaTarefas.add(Tarefa(controllerTarefa.text, _tarefas.dataHoraAtual, latitude, longitude)
+                        );
                         Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => Listagem(listaTarefas: listaItens,)),
+                                builder: (context) => const Listagem()),
                                 (Route<dynamic> route) => false);
                       }
                     }, child: const Text("Cadastrar tarefa")),
@@ -159,27 +106,4 @@ class _CadastrarState extends State<Cadastrar> {
           hour: dateTime.hour,
           minute: dateTime.minute)
   );
-
-  Future inicializarServicoLocalizacao() async {
-    var location = Location();
-
-    if (!await location.serviceEnabled()) {
-      if (!await location.requestService()) {
-        return;
-      }
-    }
-
-    var permission = await location.hasPermission();
-    if (permission == PermissionStatus.denied) {
-      permission = await location.requestPermission();
-      if (permission != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    var loc = await location.getLocation();
-
-    latitude = loc.latitude ?? 0.0;
-    longitude = loc.longitude ?? 0.0;
-  }
 }
